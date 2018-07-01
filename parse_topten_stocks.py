@@ -45,5 +45,5 @@ def lambda_handler(event, context):
     print('Opened file ' + extracted_results_from_pdf)
     outfile_xml_fp.write(data)
     outfile_xml_fp.close()
-    extracted_xml_filename_in_s3 = 'extract.xml'
+    extracted_xml_filename_in_s3 = 'xml/' + os.path.splitext(s3_new_arrived_filename)[0] + '.xml'
     s3.meta.client.upload_file(extracted_results_from_pdf, bucket, extracted_xml_filename_in_s3)
