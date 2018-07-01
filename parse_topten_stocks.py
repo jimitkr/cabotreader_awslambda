@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 import json
 import urllib
 import boto3
@@ -7,21 +8,22 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.converter import XMLConverter
 from pdfminer.layout import LAParams
 from io import BytesIO
+import os
+import re
 
 s3 = boto3.resource('s3')
 
 def lambda_handler(event, context):
-    
-    # download newly arrived file from s3 to /tmp
+
     bucket = event['Records'][0]['s3']['bucket']['name']
     s3_new_arrived_filename = urllib.unquote_plus(event['Records'][0]['s3']['object']['key'].encode('utf8'))
     print('Reading file ' + s3_new_arrived_filename + ' from S3')
+    extracted_results_from_pdf = '/tmp/extract.xml'
     downloaded_pdf_file = '/tmp/input.pdf'
     s3.meta.client.download_file(bucket, s3_new_arrived_filename, downloaded_pdf_file)
     print('Downloaded file ' + s3_new_arrived_filename + ' from S3')
 
-    # convert data from pdf file to xml, extract into /tmp/extract.xml
-    extracted_results_from_pdf = '/tmp/extract.xml'
+    # convert data from pdf file to xml
     resource_mgr = PDFResourceManager()
     retstr = BytesIO()
     codec = 'utf-8'
@@ -38,12 +40,13 @@ def lambda_handler(event, context):
     data = retstr.getvalue()
     device.close()
     retstr.close()
-    
+
     # write xml (extracted from pdf) to a new file
-    print('Opening file' + extracted_results_from_pdf + ' to write extracted xml from ' + s3_new_arrived_filename)
+    print('Opening file ' + extracted_results_from_pdf + ' to write extracted xml from ' + s3_new_arrived_filename)
     outfile_xml_fp = file(extracted_results_from_pdf, 'w')
     print('Opened file ' + extracted_results_from_pdf)
     outfile_xml_fp.write(data)
     outfile_xml_fp.close()
-    extracted_xml_filename_in_s3 = 'xml/' + os.path.splitext(s3_new_arrived_filename)[0] + '.xml'
+    filename_without_folderprefix_and_ext = re.sub(r'.*/','',os.path.splitext(s3_new_arrived_filename)[0])
+    extracted_xml_filename_in_s3 = 'xml/' + filename_without_folderprefix_and_ext + '.xml'
     s3.meta.client.upload_file(extracted_results_from_pdf, bucket, extracted_xml_filename_in_s3)
