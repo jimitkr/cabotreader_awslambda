@@ -10,6 +10,7 @@ from pdfminer.layout import LAParams
 from io import BytesIO
 import os
 import re
+import datetime
 
 s3 = boto3.resource('s3')
 
@@ -40,7 +41,7 @@ def lambda_handler(event, context):
     data = retstr.getvalue()
     device.close()
     retstr.close()
-
+    
     # write xml (extracted from pdf) to a new file
     print('Opening file ' + extracted_results_from_pdf + ' to write extracted xml from ' + s3_new_arrived_filename)
     outfile_xml_fp = file(extracted_results_from_pdf, 'w')
@@ -50,3 +51,12 @@ def lambda_handler(event, context):
     filename_without_folderprefix_and_ext = re.sub(r'.*/','',os.path.splitext(s3_new_arrived_filename)[0])
     extracted_xml_filename_in_s3 = 'xml/' + filename_without_folderprefix_and_ext + '.xml'
     s3.meta.client.upload_file(extracted_results_from_pdf, bucket, extracted_xml_filename_in_s3)
+
+    message = {"topten_trader_xml_filepath" : extracted_xml_filename_in_s3}
+    sns_client = boto3.client('sns', region_name='us-east-1')
+    sns_response = sns_client.publish(
+        TargetArn='arn:aws:sns:us-east-1:898821117686:stock_data_extracted',
+        Message=json.dumps({'default': json.dumps(message)}),
+        Subject='Stock Buy Recommendations ' + str(datetime.date.today()),
+        MessageStructure='json'
+    )
