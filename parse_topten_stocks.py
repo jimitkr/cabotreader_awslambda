@@ -47,6 +47,7 @@ def lambda_handler(event, context):
     outfile_xml_fp = file(extracted_results_from_pdf, 'w')
     print('Opened file ' + extracted_results_from_pdf)
     outfile_xml_fp.write(data)
+    outfile_xml_fp.write("</pages>")
     outfile_xml_fp.close()
     filename_without_folderprefix_and_ext = re.sub(r'.*/','',os.path.splitext(s3_new_arrived_filename)[0])
     extracted_xml_filename_in_s3 = 'xml/' + filename_without_folderprefix_and_ext + '.xml'
