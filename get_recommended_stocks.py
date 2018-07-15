@@ -7,6 +7,7 @@ import boto3
 from io import BytesIO
 import os
 import re
+import datetime
 
 s3 = boto3.resource('s3')
 
@@ -35,4 +36,11 @@ def lambda_handler(event, context):
         	text_content = text_content[(text_content.find('(') + 1):text_content.find(')')]
         	if text_content.isupper() and len(text_content) < 5 and text_content.isalpha():     # if text_content is < 4 chars and is all uppercase, you've found your stock ticker !! Add it to master_stock_ticker_list
                 	master_stock_ticker_list.append(text_content)
-	print(master_stock_ticker_list)
+	#print(master_stock_ticker_list)
+	message = {"recommended_stock_list": master_stock_ticker_list}
+	sns_client = boto3.client('sns', region_name='us-east-1')
+	sns_response = sns_client.publish(
+		TargetArn='arn:aws:sns:us-east-1:898821117686:ten_stock_tickers_extracted',
+		Message=json.dumps({'default': json.dumps(message)}),
+		Subject='Ten Recommended Stocks ' + str(datetime.date.today()),
+		MessageStructure='json')
