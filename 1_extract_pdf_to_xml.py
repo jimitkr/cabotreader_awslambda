@@ -61,7 +61,7 @@ def lambda_handler(event, context):
     message = {"topten_trader_xml_filepath" : extracted_xml_filename_in_s3}
     sns_client = boto3.client('sns', region_name='us-east-1')
     sns_response = sns_client.publish(
-        TargetArn='arn:aws:sns:us-east-1:898821117686:stock_data_extracted',
+        TargetArn='arn:aws:sns:us-east-1:<aws_account_#>:stock_data_extracted',
         Message=json.dumps({'default': json.dumps(message)}),
         Subject='Stock Buy Recommendations ' + str(datetime.date.today()),
         MessageStructure='json'

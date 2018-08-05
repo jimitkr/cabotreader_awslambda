@@ -48,7 +48,7 @@ def lambda_handler(event, context):
 	message = {"recommended_stock_list": master_stock_ticker_list, "buy_range_and_loss_limits": buy_range_and_loss_limits}
 	sns_client = boto3.client('sns', region_name='us-east-1')
 	sns_response = sns_client.publish(
-		TargetArn='arn:aws:sns:us-east-1:898821117686:ten_stock_tickers_extracted',
+		TargetArn='arn:aws:sns:us-east-1:<aws_account_#>:ten_stock_tickers_extracted',
 		Message=json.dumps({'default': json.dumps(message)}),
 		Subject='Ten Recommended Stocks ' + str(datetime.date.today()),
 		MessageStructure='json')
